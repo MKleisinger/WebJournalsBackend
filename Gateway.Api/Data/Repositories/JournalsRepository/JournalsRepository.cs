@@ -4,23 +4,28 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Gateway.Api.Data.Repositories.JournalsRepository {
-    public class JournalsRepository : IJournalsRepository {       
+    public class JournalsRepository : IRepository<JournalEntity> {       
 
-        public JournalsRepository(IMongoDBService mongoDBService) {
+        public JournalsRepository(IMongoDBService<JournalEntity> mongoDBService) {
             MongoDBService = mongoDBService;
+            this.MongoDBService.Init("journals");
         }
-        public IMongoDBService MongoDBService { get; }
+        public IMongoDBService<JournalEntity> MongoDBService { get; }
 
-        public async Task<IEnumerable<JournalEntity>> GetJournals() {
+        public async Task<IEnumerable<JournalEntity>> GetAll(string id = "") {
             return await MongoDBService.GetAsync();
         }
 
-        public async Task<JournalEntity> GetJournal(string journalID) {
+        public async Task<JournalEntity> GetByID(string journalID) {
             return await MongoDBService.GetByIDAsync(journalID);
         }
 
-        public async Task CreateJournal(JournalEntity journal) {            
+        public async Task Create(JournalEntity journal) {            
             await MongoDBService.CreateAsync(journal);
+        }
+
+        public async Task Update(JournalEntity journal) {
+            await MongoDBService.UpdateAsync(journal);
         }
     }
 }
