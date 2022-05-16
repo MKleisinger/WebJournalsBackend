@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Gateway.Api.Data.MongoDB {
-    public interface IMongoDBService {
-        Task<IEnumerable<JournalEntity>> GetAsync();
-        Task<JournalEntity> GetByIDAsync(string journalID);
-        Task CreateAsync(JournalEntity journal);
-        Task AddToJournalAsync(string journalId, string entryId);
-        Task DeleteAsync(string journalId);
-
+    public interface IMongoDBService<T> {
+        Task<IEnumerable<T>> GetAsync();
+        Task<T> GetByIDAsync(string entityID);
+        Task<IEnumerable<T>> GetByPropertyAsync(string propertyName, object value);
+        Task CreateAsync(T entity);
+        Task UpdateAsync(T entity);        
+        Task DeleteAsync(string entityID);
+        void Init(string collection);
     }
 }

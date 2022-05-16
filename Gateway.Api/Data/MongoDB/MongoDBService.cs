@@ -5,30 +5,49 @@ using MongoDB.Bson;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using System.Linq;
 
 namespace Gateway.Api.Data.MongoDB {
-    public class MongoDBService : IMongoDBService {
-        private readonly IMongoCollection<JournalEntity> journalsCollection;
+    public class MongoDBService<TDoc> : IMongoDBService<TDoc> where TDoc : IDocument {
+        private IMongoCollection<TDoc> Collection { get; set; }
+        private IOptions<MongoDBSettings> MongoDBSettings { get; }
 
-        public MongoDBService(IOptions<MongoDBSettings> settings) {
-            var client = new MongoClient(settings.Value.ConnectionURI);
-            var db = client.GetDatabase(settings.Value.DatabaseName);
-            this.journalsCollection = db.GetCollection<JournalEntity>(settings.Value.CollectionName);
+        public MongoDBService(IOptions<MongoDBSettings> settings) {            
+            this.MongoDBSettings = settings;            
         }
 
-        public async Task<IEnumerable<JournalEntity>> GetAsync() {
-            return await journalsCollection.Find(new BsonDocument()).ToListAsync();
-        }
-        public async Task<JournalEntity> GetByIDAsync(string journalID) {
-            var filter = Builders<JournalEntity>.Filter.Eq("JournalID", journalID);
-            return await journalsCollection.Find(filter).FirstOrDefaultAsync();
+        public void Init(string collection) {
+            var client = new MongoClient(MongoDBSettings.Value.ConnectionURI);
+            var db = client.GetDatabase(MongoDBSettings.Value.DatabaseName);
+            this.Collection = db.GetCollection<TDoc>(collection);
         }
 
-        public async Task CreateAsync(JournalEntity journal) {
-            await journalsCollection.InsertOneAsync(journal);
+        public async Task<IEnumerable<TDoc>> GetAsync() {
+            return await Collection.Find(new BsonDocument()).ToListAsync();
         }
 
-        public async Task AddToJournalAsync(string journalId, string entryId) { }
-        public async Task DeleteAsync(string journalId) { }
+        public async Task<TDoc> GetByIDAsync(string entityId) {
+            var filter = Builders<TDoc>.Filter.Eq("Id", entityId);
+            return await Collection.Find(filter).FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<TDoc>> GetByPropertyAsync(string propertyName, object value) {
+            var filter = Builders<TDoc>.Filter.Eq(propertyName, value);
+            return await Collection.Find(filter).ToListAsync();
+        }
+
+        public async Task CreateAsync(TDoc entity) {
+            await Collection.InsertOneAsync(entity);
+        }
+
+        public async Task UpdateAsync(TDoc entity) {
+            var filter = Builders<TDoc>.Filter.Eq("Id", entity.Id);
+            await Collection.ReplaceOneAsync(filter, entity);
+        }
+
+        public async Task DeleteAsync(string entityId) {
+            var filter = Builders<TDoc>.Filter.Eq("Id", entityId);
+            await Collection.DeleteOneAsync(filter);
+        }
     }
 }

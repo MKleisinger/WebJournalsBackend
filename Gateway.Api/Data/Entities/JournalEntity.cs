@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Gateway.Api.Data.Entities {
-    public class JournalEntity {
+    public class JournalEntity : IDocument {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string JournalID { get; set; }
+        public string Id { get; set; }
 
         [BsonElement("title")]
         [JsonPropertyName("title")]
@@ -20,9 +20,5 @@ namespace Gateway.Api.Data.Entities {
         [BsonElement("bullets")]
         [JsonPropertyName("bullets")]
         public IEnumerable<JournalBulletEntity> Bullets { get; set; }
-
-        [BsonElement("entries")]
-        [JsonPropertyName("entries")]
-        public IEnumerable<JournalEntryEntity> Entries { get; set; }
     }
 }

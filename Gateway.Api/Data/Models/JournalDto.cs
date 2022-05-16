@@ -2,8 +2,9 @@
 
 namespace Gateway.Api.Data.Models {
     public class JournalDto {
-        public string JournalID { get; set; }
+        public string Id { get; set; }
         public string Title { get; set; }
-        public IEnumerable<JournalEntryDto> Entries { get; set; }
+        public string Subject { get; set; }
+        public IEnumerable<JournalBulletDto> Bullets { get; set; }
     }
 }

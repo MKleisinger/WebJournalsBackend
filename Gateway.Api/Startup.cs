@@ -1,5 +1,6 @@
 using Gateway.Api.Data.Entities;
 using Gateway.Api.Data.MongoDB;
+using Gateway.Api.Data.Repositories;
 using Gateway.Api.Data.Repositories.JournalsRepository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -26,6 +27,9 @@ namespace Gateway.Api {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
+#if DEBUG
+            services.AddCors();
+#endif
             services.AddControllers(setupAction => {
                 setupAction.ReturnHttpNotAcceptable = true;
             }).AddXmlDataContractSerializerFormatters();
@@ -34,8 +38,10 @@ namespace Gateway.Api {
             services.Configure<MongoDBSettings>(Configuration.GetSection("MongoDB"));
 
             // Dependency Injection
-            services.AddScoped<IJournalsRepository, JournalsRepository>();
-            services.AddScoped<IMongoDBService, MongoDBService>();
+            // TODO: Use either ninject or light inject
+            services.AddScoped<IRepository<JournalEntity>, JournalsRepository>();
+            services.AddScoped<IRepository<JournalEntryEntity>, JournalEntriesRepository>();
+            services.AddTransient(typeof(IMongoDBService<>), typeof(MongoDBService<>));
 
             // Setup AutoMapper
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());            
@@ -53,10 +59,18 @@ namespace Gateway.Api {
                     builder.Run(async context => {
                         context.Response.StatusCode = 500;
                         await context.Response.WriteAsync("An unexpected fault occurred. Try again later.");
-                        // log 
+                        // TODO: add logging 
                     });
                 });
             }
+
+#if DEBUG 
+            app.UseCors(builder => {
+                builder.AllowAnyOrigin();
+                builder.AllowAnyHeader();
+                builder.AllowAnyMethod();
+            });
+#endif
 
             app.UseHttpsRedirection();
 
